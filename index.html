@@ -4,27 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a3e2a">
-    <title>ENKOMOS-Field</title>
+    <title>ENKOMOS-Field Pro</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <!-- Simple encryption library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🌿 ENKOMOS-Field</h1>
-            <p class="subtitle">Offline Field Data Collection</p>
+            <h1>🌿 ENKOMOS-Field Pro</h1>
+            <p class="subtitle">Offline Field Data Collection | Encrypted</p>
             <div class="sync-status" id="syncStatus">
                 <span class="sync-dot offline"></span>
                 <span id="syncText">Offline</span>
             </div>
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Stats Bar -->
         <div class="stats-bar" id="statsBar">
             <div class="stat">📦 <span id="pendingCount">0</span> pending</div>
             <div class="stat">✅ <span id="syncedCount">0</span> synced</div>
             <button id="syncBtn" class="btn-sync">☁️ Sync</button>
+            <button id="exportBtn" class="btn-export">📤 Export</button>
         </div>
 
         <!-- Tabs -->
@@ -32,6 +35,7 @@
             <button class="tab active" data-tab="entry">📝 New Entry</button>
             <button class="tab" data-tab="history">📋 History</button>
             <button class="tab" data-tab="recommendations">💡 Advice</button>
+            <button class="tab" data-tab="analytics">📊 Analytics</button>
         </div>
 
         <!-- Tab 1: New Entry Form -->
@@ -39,8 +43,14 @@
             <form id="dataForm">
                 <!-- Location -->
                 <div class="form-group">
-                    <label>📍 Location / Field Name</label>
+                    <label>📍 Location / Field Name *</label>
                     <input type="text" id="location" placeholder="e.g., Rajshahi - North Field" required>
+                </div>
+
+                <!-- Farmer ID -->
+                <div class="form-group">
+                    <label>👨‍🌾 Farmer ID / Name</label>
+                    <input type="text" id="farmer_id" placeholder="Optional - for tracking">
                 </div>
 
                 <!-- Crop Selection -->
@@ -52,7 +62,22 @@
                         <option value="maize">Maize</option>
                         <option value="tomato">Tomato</option>
                         <option value="potato">Potato</option>
+                        <option value="onion">Onion</option>
+                        <option value="chili">Chili</option>
+                        <option value="brinjal">Brinjal/Eggplant</option>
                         <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Growth Stage -->
+                <div class="form-group">
+                    <label>🌱 Growth Stage</label>
+                    <select id="growth_stage">
+                        <option value="seedling">Seedling / Germination</option>
+                        <option value="vegetative">Vegetative Growth</option>
+                        <option value="flowering">Flowering</option>
+                        <option value="fruiting">Fruiting / Pod formation</option>
+                        <option value="harvest">Harvest / Maturity</option>
                     </select>
                 </div>
 
@@ -78,9 +103,25 @@
                         <input type="number" id="soil_k" placeholder="Potassium">
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Organic Matter (%)</label>
+                        <input type="number" id="organic_matter" step="0.1" placeholder="%">
+                    </div>
+                    <div class="form-group">
+                        <label>Soil Moisture</label>
+                        <select id="soil_moisture">
+                            <option value="">Select...</option>
+                            <option value="wet">Wet / Waterlogged</option>
+                            <option value="moist">Moist (ideal)</option>
+                            <option value="dry">Dry</option>
+                            <option value="very_dry">Very Dry / Cracked</option>
+                        </select>
+                    </div>
+                </div>
 
                 <!-- Weather -->
-                <div class="section-title">🌤️ Weather</div>
+                <div class="section-title">🌤️ Weather Conditions</div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Temperature (°C)</label>
@@ -91,26 +132,140 @@
                         <input type="number" id="humidity" placeholder="e.g., 78">
                     </div>
                 </div>
-
-                <!-- Observed Issues -->
-                <div class="section-title">🔍 Observed Issues</div>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" value="yellow_leaves"> Yellow lower leaves</label>
-                    <label><input type="checkbox" value="purple_stems"> Purple stems</label>
-                    <label><input type="checkbox" value="leaf_scorch"> Leaf edge burn</label>
-                    <label><input type="checkbox" value="wilting"> Wilting</label>
-                    <label><input type="checkbox" value="pest_damage"> Pest damage</label>
-                    <label><input type="checkbox" value="fungus"> Fungus/mold</label>
-                    <label><input type="checkbox" value="other_issue"> Other issue</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rainfall (mm last 7 days)</label>
+                        <input type="number" id="rainfall" placeholder="e.g., 50">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Rain Date</label>
+                        <input type="date" id="last_rain_date">
+                    </div>
                 </div>
-                <div class="form-group" id="otherIssueDiv" style="display:none;">
-                    <input type="text" id="otherIssueText" placeholder="Describe the issue">
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="drought"> Drought / No rain &gt;2 weeks</label>
+                    <label><input type="checkbox" id="excess_rain"> Excessive rain / Flooding</label>
+                    <label><input type="checkbox" id="storm"> Storm / Cyclone damage</label>
+                </div>
+
+                <!-- Plant Health -->
+                <div class="section-title">🌿 Plant Health</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Crop Health Score</label>
+                        <select id="health_score">
+                            <option value="5">5 - Excellent (Vigorous growth)</option>
+                            <option value="4">4 - Good (Minor issues)</option>
+                            <option value="3">3 - Average (Noticeable problems)</option>
+                            <option value="2">2 - Poor (Severe issues)</option>
+                            <option value="1">1 - Critical (Crop failure risk)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Leaf Color</label>
+                        <select id="leaf_color">
+                            <option value="dark_green">Dark Green (Healthy)</option>
+                            <option value="green">Green (Normal)</option>
+                            <option value="yellow_green">Yellow-Green (Mild deficiency)</option>
+                            <option value="yellow">Yellow (Deficiency)</option>
+                            <option value="brown">Brown / Dead tissue</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Observed Issues (Expanded) -->
+                <div class="section-title">🔍 Observed Issues (Check all that apply)</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="yellow_lower_leaves"> Yellow lower leaves (N deficiency)</label>
+                    <label><input type="checkbox" value="purple_stems"> Purple stems (P deficiency)</label>
+                    <label><input type="checkbox" value="leaf_edge_burn"> Leaf edge burn (K deficiency)</label>
+                    <label><input type="checkbox" value="yellow_between_veins"> Yellow between veins (Mg or Fe)</label>
+                    <label><input type="checkbox" value="curled_leaves"> Curled / Distorted leaves</label>
+                    <label><input type="checkbox" value="wilting"> Wilting (Water or disease)</label>
+                    <label><input type="checkbox" value="stunted_growth"> Stunted growth</label>
+                    <label><input type="checkbox" value="flower_drop"> Flower / Fruit drop</label>
+                    <label><input type="checkbox" value="fruit_crack"> Fruit cracking</label>
+                </div>
+
+                <!-- Pest and Disease -->
+                <div class="section-title">🐛 Pest & Disease</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pest Type</label>
+                        <select id="pest_type">
+                            <option value="">None</option>
+                            <option value="aphids">Aphids</option>
+                            <option value="caterpillar">Caterpillar</option>
+                            <option value="whitefly">Whitefly</option>
+                            <option value="thrips">Thrips</option>
+                            <option value="mite">Spider Mite</option>
+                            <option value="stem_borer">Stem Borer</option>
+                            <option value="fruit_borer">Fruit Borer</option>
+                            <option value="other_pest">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pest Severity</label>
+                        <select id="pest_severity">
+                            <option value="">None</option>
+                            <option value="low">Low (Few insects)</option>
+                            <option value="medium">Medium (Noticeable damage)</option>
+                            <option value="high">High (Widespread, crop threat)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Disease Name</label>
+                        <input type="text" id="disease_name" placeholder="e.g., Blight, Mildew, Rust">
+                    </div>
+                    <div class="form-group">
+                        <label>Disease Severity</label>
+                        <select id="disease_severity">
+                            <option value="">None</option>
+                            <option value="low">Low (Few plants)</option>
+                            <option value="medium">Medium (Patchy)</option>
+                            <option value="high">High (Widespread)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Farm Inputs -->
+                <div class="section-title">🧑‍🌾 Farm Inputs (Last 30 days)</div>
+                <div class="form-group">
+                    <label>Fertilizer Applied</label>
+                    <input type="text" id="fertilizer_applied" placeholder="e.g., Urea 50kg, DAP 25kg">
+                </div>
+                <div class="form-group">
+                    <label>Pesticide Applied</label>
+                    <input type="text" id="pesticide_applied" placeholder="e.g., Malathion, Neem oil">
+                </div>
+                <div class="form-group">
+                    <label>Other Inputs</label>
+                    <input type="text" id="other_inputs" placeholder="e.g., Compost, Mulch">
+                </div>
+
+                <!-- Yield Estimate -->
+                <div class="section-title">📊 Yield Estimate</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Expected Yield (kg per plant or m²)</label>
+                        <input type="number" id="expected_yield" step="0.1" placeholder="e.g., 2.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <select id="yield_unit">
+                            <option value="kg_per_plant">kg per plant</option>
+                            <option value="kg_per_m2">kg per m²</option>
+                            <option value="tons_per_hectare">tons per hectare</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Notes -->
                 <div class="form-group">
                     <label>📝 Additional Notes</label>
-                    <textarea id="notes" rows="2" placeholder="Any other observations..."></textarea>
+                    <textarea id="notes" rows="3" placeholder="Any other observations..."></textarea>
                 </div>
 
                 <!-- Photo -->
@@ -119,7 +274,7 @@
                     <input type="file" id="photo" accept="image/*" capture="environment">
                 </div>
 
-                <button type="submit" class="btn-submit">💾 Save Entry (Offline)</button>
+                <button type="submit" class="btn-submit">💾 Save Entry (Encrypted + Offline)</button>
             </form>
         </div>
 
@@ -128,13 +283,23 @@
             <div id="historyList" class="history-list">
                 <div class="empty-state">No entries yet. Add your first field data.</div>
             </div>
-            <button id="clearHistoryBtn" class="btn-danger" style="margin-top: 16px;">🗑️ Clear All History</button>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button id="clearHistoryBtn" class="btn-danger">🗑️ Clear All History</button>
+                <button id="decryptBackupBtn" class="btn-secondary">🔓 Decrypt Backup</button>
+            </div>
         </div>
 
         <!-- Tab 3: Recommendations -->
         <div class="tab-content" id="tab-recommendations">
             <div id="recommendationsList" class="recommendations-list">
                 <div class="empty-state">Sync data to get AI recommendations.</div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Analytics -->
+        <div class="tab-content" id="tab-analytics">
+            <div id="analyticsContainer">
+                <div class="empty-state">Enter data to see analytics.</div>
             </div>
         </div>
     </div>

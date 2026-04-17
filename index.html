@@ -87,7 +87,7 @@
             gap: 4px;
         }
 
-        .btn-sync, .btn-export, .btn-upgrade {
+        .btn-sync, .btn-export, .btn-upgrade, .btn-live {
             background: #2ecc71;
             border: none;
             color: white;
@@ -104,6 +104,20 @@
         .btn-upgrade {
             background: #ffd700;
             color: #0a3e2a;
+        }
+
+        .btn-live {
+            background: #9b59b6;
+            width: 100%;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 16px;
+        }
+
+        .btn-live:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .tabs {
@@ -394,6 +408,13 @@
             text-align: center;
             font-size: 0.8em;
         }
+
+        .api-note {
+            font-size: 0.65em;
+            text-align: center;
+            margin-top: 8px;
+            opacity: 0.6;
+        }
     </style>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
@@ -402,7 +423,7 @@
     <div class="container">
         <div class="header">
             <h1>🌿 ENKOMOS-Field Pro</h1>
-            <p class="subtitle">Offline Field Data Collection | Encrypted</p>
+            <p class="subtitle">Offline Field Data Collection | Encrypted | Live Data</p>
             <div class="sync-status" id="syncStatus">
                 <span class="sync-dot offline"></span>
                 <span id="syncText">Offline</span>
@@ -435,9 +456,13 @@
         <!-- Tab 1: New Entry -->
         <div class="tab-content active" id="tab-entry">
             <form id="dataForm">
+                <!-- Live Data Button -->
+                <button type="button" id="getLiveDataBtn" class="btn-live cloud-feature">🌍 Get Live Data from Satellites</button>
+                <div class="api-note cloud-feature">Uses SoilGrids, Open-Meteo & NASA POWER (Pro feature)</div>
+
                 <div class="form-group">
                     <label>📍 Location / Field Name *</label>
-                    <input type="text" id="location" placeholder="e.g., Rajshahi - North Field" required>
+                    <input type="text" id="location" placeholder="e.g., North Field - Rice Plot" required>
                 </div>
                 <div class="form-group">
                     <label>👨‍🌾 Farmer ID / Name</label>
@@ -617,7 +642,7 @@
 
         <!-- Tab 3: Recommendations -->
         <div class="tab-content" id="tab-recommendations">
-            <div id="recommendationsList" class="recommendations-list"><div class="empty-state">Sync data to get AI recommendations.</div></div>
+            <div id="recommendationsList" class="recommendations-list"><div class="empty-state">Add entries to get AI recommendations.</div></div>
         </div>
 
         <!-- Tab 4: Analytics -->

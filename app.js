@@ -1,11 +1,15 @@
 // ==================== ENKOMOS-Field Pro ====================
 // Complete app with membership system, offline storage, encryption, and live API data
+// SUPERVISOR MODE: ON (set to false for public release)
 
 // ==================== CONFIGURATION ====================
 const ENCRYPTION_KEY = 'ENKOMOS-ESTELA-2026-SECRET-KEY-CHANGE-ME';
 const DB_NAME = 'ENKOMOS_Field_Pro_DB';
 const DB_VERSION = 2;
 const STORE_NAME = 'field_entries';
+
+// SUPERVISOR MODE - Set to false when launching to public
+const SUPERVISOR_MODE = true;
 
 // Membership configuration
 const MEMBERSHIP_API = 'https://api.enkomos.com/v1';
@@ -166,6 +170,9 @@ function hideExpiryWarning() {
 }
 
 function canUseFeature(feature) {
+    // SUPERVISOR MODE: Bypass all membership checks
+    if (SUPERVISOR_MODE) return true;
+    
     if (membership.tier === 'free') return false;
     
     const graceDays = getGraceDays();
@@ -196,13 +203,17 @@ function getGraceDays() {
 }
 
 function updateUIForMembership() {
-    const isMember = membership.tier !== 'free';
+    const isMember = membership.tier !== 'free' || SUPERVISOR_MODE;
     const badge = document.getElementById('membershipBadge');
     const cloudFeatures = document.querySelectorAll('.cloud-feature');
     
     if (isMember) {
         badge.className = 'membership-badge paid';
-        badge.innerHTML = `⭐ ${membership.tier.toUpperCase()} MEMBER | Click to manage`;
+        if (SUPERVISOR_MODE) {
+            badge.innerHTML = '👑 SUPERVISOR MODE | Full Access';
+        } else {
+            badge.innerHTML = `⭐ ${membership.tier.toUpperCase()} MEMBER | Click to manage`;
+        }
         cloudFeatures.forEach(el => el.style.display = 'block');
         hideExpiryWarning();
     } else {
@@ -214,6 +225,7 @@ function updateUIForMembership() {
 
 async function verifyMembershipWithServer() {
     if (!navigator.onLine) return;
+    if (SUPERVISOR_MODE) return;
     
     try {
         const response = await fetch(`${MEMBERSHIP_API}/verify`, {
@@ -255,6 +267,8 @@ function getDeviceId() {
 }
 
 function showMembershipModal() {
+    if (SUPERVISOR_MODE) return;
+    
     const modalHtml = `
         <div id="membershipModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;">
             <div style="background:#1a5c3a; max-width:400px; width:100%; border-radius:20px; padding:20px;">
@@ -389,9 +403,9 @@ async function fetchAllLiveData() {
     const btn = document.getElementById('getLiveDataBtn');
     if (!btn) return;
     
-    // Check membership - if free, show upgrade modal
-    if (!canUseFeature('live_data')) {
-        alert('Live satellite data is a Pro feature.\n\nUpgrade to Basic ($5/mo) or Pro ($20/mo) to unlock:\n\n• Automatic soil pH from satellites\n• Live weather and rainfall data\n• NASA soil moisture readings\n• Cloud backup and sync\n• Advanced AI recommendations\n\nContact us for NGO/Government pricing.');
+    // SUPERVISOR MODE bypasses membership check
+    if (!SUPERVISOR_MODE && !canUseFeature('live_data')) {
+        alert('🔒 Live satellite data is a Pro feature.\n\nUpgrade to Basic ($5/mo) or Pro ($20/mo) to unlock:\n\n• Automatic soil pH from satellites\n• Live weather and rainfall data\n• NASA soil moisture readings\n• Cloud backup and sync\n• Advanced AI recommendations\n\nContact us for NGO/Government pricing.');
         showMembershipModal();
         return;
     }
@@ -750,18 +764,24 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ==================== BUTTON HANDLERS ====================
-document.getElementById('syncBtn').addEventListener('click', syncToCloud);
-document.getElementById('exportBtn').addEventListener('click', exportEncryptedData);
-document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
+const syncBtn = document.getElementById('syncBtn');
+if (syncBtn) syncBtn.addEventListener('click', syncToCloud);
+
+const exportBtn = document.getElementById('exportBtn');
+if (exportBtn) exportBtn.addEventListener('click', exportEncryptedData);
+
+const clearBtn = document.getElementById('clearHistoryBtn');
+if (clearBtn) clearBtn.addEventListener('click', async () => {
     if (confirm('WARNING: This will delete ALL field data. Are you sure?')) {
         await clearAllEntries();
         refreshUI();
         alert('All data cleared.');
     }
 });
-document.getElementById('decryptBackupBtn').addEventListener('click', importDecryptedBackup);
 
-// Live data button
+const decryptBtn = document.getElementById('decryptBackupBtn');
+if (decryptBtn) decryptBtn.addEventListener('click', importDecryptedBackup);
+
 const liveDataBtn = document.getElementById('getLiveDataBtn');
 if (liveDataBtn) {
     liveDataBtn.addEventListener('click', fetchAllLiveData);
@@ -771,15 +791,16 @@ if (liveDataBtn) {
 window.addEventListener('online', () => {
     const syncDot = document.querySelector('.sync-dot');
     const syncText = document.getElementById('syncText');
-    syncDot.className = 'sync-dot online';
-    syncText.textContent = 'Online';
+    if (syncDot) syncDot.className = 'sync-dot online';
+    if (syncText) syncText.textContent = 'Online';
     verifyMembershipWithServer();
 });
+
 window.addEventListener('offline', () => {
     const syncDot = document.querySelector('.sync-dot');
     const syncText = document.getElementById('syncText');
-    syncDot.className = 'sync-dot offline';
-    syncText.textContent = 'Offline';
+    if (syncDot) syncDot.className = 'sync-dot offline';
+    if (syncText) syncText.textContent = 'Offline';
 });
 
 // ==================== INITIALIZATION ====================
@@ -791,8 +812,8 @@ async function init() {
     if (navigator.onLine) {
         const syncDot = document.querySelector('.sync-dot');
         const syncText = document.getElementById('syncText');
-        syncDot.className = 'sync-dot online';
-        syncText.textContent = 'Online';
+        if (syncDot) syncDot.className = 'sync-dot online';
+        if (syncText) syncText.textContent = 'Online';
         await verifyMembershipWithServer();
     }
     

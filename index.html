@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a3e2a">
+    <title>ENKOMOS-Field</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌿 ENKOMOS-Field</h1>
+            <p class="subtitle">Offline Field Data Collection</p>
+            <div class="sync-status" id="syncStatus">
+                <span class="sync-dot offline"></span>
+                <span id="syncText">Offline</span>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat">📦 <span id="pendingCount">0</span> pending</div>
+            <div class="stat">✅ <span id="syncedCount">0</span> synced</div>
+            <button id="syncBtn" class="btn-sync">☁️ Sync</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="entry">📝 New Entry</button>
+            <button class="tab" data-tab="history">📋 History</button>
+            <button class="tab" data-tab="recommendations">💡 Advice</button>
+        </div>
+
+        <!-- Tab 1: New Entry Form -->
+        <div class="tab-content active" id="tab-entry">
+            <form id="dataForm">
+                <!-- Location -->
+                <div class="form-group">
+                    <label>📍 Location / Field Name</label>
+                    <input type="text" id="location" placeholder="e.g., Rajshahi - North Field" required>
+                </div>
+
+                <!-- Crop Selection -->
+                <div class="form-group">
+                    <label>🌾 Crop Type</label>
+                    <select id="crop">
+                        <option value="rice">Rice</option>
+                        <option value="wheat">Wheat</option>
+                        <option value="maize">Maize</option>
+                        <option value="tomato">Tomato</option>
+                        <option value="potato">Potato</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Soil Tests -->
+                <div class="section-title">🧪 Soil Analysis</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>pH</label>
+                        <input type="number" id="soil_ph" step="0.1" placeholder="6.0-7.5">
+                    </div>
+                    <div class="form-group">
+                        <label>N (ppm)</label>
+                        <input type="number" id="soil_n" placeholder="Nitrogen">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>P (ppm)</label>
+                        <input type="number" id="soil_p" placeholder="Phosphorus">
+                    </div>
+                    <div class="form-group">
+                        <label>K (ppm)</label>
+                        <input type="number" id="soil_k" placeholder="Potassium">
+                    </div>
+                </div>
+
+                <!-- Weather -->
+                <div class="section-title">🌤️ Weather</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Temperature (°C)</label>
+                        <input type="number" id="temp" step="0.1" placeholder="e.g., 32.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Humidity (%)</label>
+                        <input type="number" id="humidity" placeholder="e.g., 78">
+                    </div>
+                </div>
+
+                <!-- Observed Issues -->
+                <div class="section-title">🔍 Observed Issues</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="yellow_leaves"> Yellow lower leaves</label>
+                    <label><input type="checkbox" value="purple_stems"> Purple stems</label>
+                    <label><input type="checkbox" value="leaf_scorch"> Leaf edge burn</label>
+                    <label><input type="checkbox" value="wilting"> Wilting</label>
+                    <label><input type="checkbox" value="pest_damage"> Pest damage</label>
+                    <label><input type="checkbox" value="fungus"> Fungus/mold</label>
+                    <label><input type="checkbox" value="other_issue"> Other issue</label>
+                </div>
+                <div class="form-group" id="otherIssueDiv" style="display:none;">
+                    <input type="text" id="otherIssueText" placeholder="Describe the issue">
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label>📝 Additional Notes</label>
+                    <textarea id="notes" rows="2" placeholder="Any other observations..."></textarea>
+                </div>
+
+                <!-- Photo -->
+                <div class="form-group">
+                    <label>📷 Photo (optional)</label>
+                    <input type="file" id="photo" accept="image/*" capture="environment">
+                </div>
+
+                <button type="submit" class="btn-submit">💾 Save Entry (Offline)</button>
+            </form>
+        </div>
+
+        <!-- Tab 2: History -->
+        <div class="tab-content" id="tab-history">
+            <div id="historyList" class="history-list">
+                <div class="empty-state">No entries yet. Add your first field data.</div>
+            </div>
+            <button id="clearHistoryBtn" class="btn-danger" style="margin-top: 16px;">🗑️ Clear All History</button>
+        </div>
+
+        <!-- Tab 3: Recommendations -->
+        <div class="tab-content" id="tab-recommendations">
+            <div id="recommendationsList" class="recommendations-list">
+                <div class="empty-state">Sync data to get AI recommendations.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

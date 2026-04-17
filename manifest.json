@@ -1,0 +1,16 @@
+{
+  "name": "ENKOMOS-Field",
+  "short_name": "E-Field",
+  "description": "Offline field data collection for ENKOMOS agricultural system",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a3e2a",
+  "background_color": "#0a3e2a",
+  "icons": [
+    {
+      "src": "https://emojicdn.elk.sh/🌿",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

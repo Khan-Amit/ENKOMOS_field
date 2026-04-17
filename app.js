@@ -172,6 +172,7 @@ function canUseFeature(feature) {
     
     switch(feature) {
         case 'cloud_sync':
+            return membership.tier !== 'free' && graceDays <= 7;
         case 'live_data':
             return membership.tier !== 'free' && graceDays <= 7;
         case 'lab_submission':
@@ -388,9 +389,9 @@ async function fetchAllLiveData() {
     const btn = document.getElementById('getLiveDataBtn');
     if (!btn) return;
     
-    // Check membership
+    // Check membership - if free, show upgrade modal
     if (!canUseFeature('live_data')) {
-        alert('Live satellite data is a Pro feature. Please upgrade to Basic, Pro, or Enterprise tier.');
+        alert('Live satellite data is a Pro feature.\n\nUpgrade to Basic ($5/mo) or Pro ($20/mo) to unlock:\n\n• Automatic soil pH from satellites\n• Live weather and rainfall data\n• NASA soil moisture readings\n• Cloud backup and sync\n• Advanced AI recommendations\n\nContact us for NGO/Government pricing.');
         showMembershipModal();
         return;
     }
